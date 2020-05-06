@@ -18,8 +18,9 @@ from ServerClass import Server
 
 
 def Usage():
-    print("Usage: <host> <port> <db name>")
-    print(f"Example: {sys.argv[0]} host=10.0.61.34 port=6000 db=stockmarket")
+    print("Usage: <host> <port>")
+    print(f"Example: {sys.argv[0]} host=10.0.61.34 port=6000")
+    
     sys.exit()
 
 if __name__=='__main__':
@@ -33,16 +34,18 @@ if __name__=='__main__':
     # Get key value pairs from command line (see usage)
     kwargs,args = myArgParse(sys.argv)
 
-    db = kwargs.get("db",config.database)          # db = mongodb database name
     host = kwargs.get("host",config.host)      # host = ip address
     port = int(kwargs.get("port",config.port)) # port = chosen port
 
     # print how to use if both values not on command 
-    if not (db and host and port):
+    if not (host and port):
         Usage()
 
     # actually start listening
-    server = Server(db,host,port)
+
+    # Broday changed:
+    # no more db argument in Server instantiation (and the definition in ServerClass.py)
+    server = Server(host,port)
     server.run_server()
 
  

@@ -19,30 +19,27 @@ from helpers import myArgParse
 import json
 
 def Usage():
-    print("Usage: <host> <port> <action> <value>")
-    print(f"Example: {sys.argv[0]} host=10.0.61.34 port=6000 action=search value=rhino")
+    print("Usage: <host> <port> <action>")
+    print(f"Example: {sys.argv[0]} host=10.0.61.34 port=6000 action=guess")
     sys.exit()
 
 
 if __name__ == "__main__":
-    """ Main client driver. 
- 
+    """ 
+    Main client driver. 
     """
     kwargs, args = myArgParse(sys.argv)
-    # print(kwargs,args)
+    print(kwargs,args)
 
     # get items from command line OR load them from config file
     host = kwargs.get("host", config.host)          # MANDATORY 
     port = int(kwargs.get("port", config.port))     # MANDATORY Port to connect to (XXXXX, e,g, 6000)
-    db = kwargs.get("db", config.database)  
-
-
+    
     action = kwargs.get("action", None)             # MANDATORY Tells backend what to do: (search,insert, etc.) 
 
     # The variables below are optional depending on what you are doing. 
     key = kwargs.get("key", None)                   # optional 
     value = kwargs.get("value", None)               # optional
-    collection = kwargs.get("collection", None)     # optional
     data = kwargs.get("data", None)                 # optional
     params = kwargs.get("params",None)
 
@@ -57,7 +54,9 @@ if __name__ == "__main__":
 
     # run `Client.py host=xxx.xxx.xxx.xxx port=xxxx action=test` to see if server responds 
 
-    request = request.createRequest(action=action, key=key, collection=collection, data=data, value=value, params=params)
+    # Broday
+    # Remove collection
+    request = request.createRequest(action=action, key=key, data=data, value=value, params=params)
 
     client = Client(host, port)
     client.start_connection(request)

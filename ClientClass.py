@@ -20,8 +20,9 @@ from Message import ClientMessage
                |_|                    
 """
 class Request:
-    """This class builds an appropriate json request for the client to send. 
-       It makes sure all requests are formatted the same.  
+    """
+    This class builds an appropriate json request for the client to send. 
+    It makes sure all requests are formatted the same.  
     """
     def __init__(self):
         self.request = {}
@@ -30,7 +31,7 @@ class Request:
         self.request['content'] = {}
 
     def createRequest(self, **kwargs):
-        """ Loops through kwargs and pulls out all key value pair creating
+        """ Loops through kwargs and pulls out all key value pairs creating
         a python dictionary to be sent to the server as json
         """
         for k,v in kwargs.items():
@@ -63,28 +64,40 @@ class Client:
 
     def start_connection(self, request):
         addr = (self.host, self.port)
+
         if self.debug:
             print("starting connection to", addr)
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
         sock.connect_ex(addr)
+
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
+
+        # Broday
+        # 
         message = ClientMessage(self.sel, sock, addr, request)
+
         self.sel.register(sock, events, data=message)
 
         try:
             while True:
                 events = self.sel.select(timeout=1)
+
                 for key, mask in events:
                     message = key.data
+
                     try:
                         message.process_events(mask)
+
                     except Exception:
                         print(
                             "main: error: exception for",
                             f"{message.addr}:\n{traceback.format_exc()}",
                         )
+
                         message.close()
+                        
                 # Check for a socket being monitored to continue.
                 if not self.sel.get_map():
                     break

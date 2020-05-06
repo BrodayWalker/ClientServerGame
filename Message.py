@@ -8,7 +8,6 @@ import struct
 import socket
 import traceback
 import time
-import traceback
 
 from DbHelpers import Api
 
@@ -36,6 +35,7 @@ class Message:
         self._send_buffer = b""
         self._jsonheader_len = None
         self.jsonheader = None
+        
 
     def _set_selector_events_mask(self, mode):
         """Set selector to listen for events: mode is 'r', 'w', or 'rw'."""
@@ -82,6 +82,7 @@ class Message:
         tiow = io.TextIOWrapper(io.BytesIO(json_bytes), encoding=encoding, newline="")
         obj = json.load(tiow)
         tiow.close()
+
         return obj
 
     def _create_message(self, *, content_bytes, content_type, content_encoding):
@@ -91,9 +92,13 @@ class Message:
             "content-encoding": content_encoding,
             "content-length": len(content_bytes),
         }
+
         jsonheader_bytes = self._json_encode(jsonheader, "utf-8")
+
         message_hdr = struct.pack(">H", len(jsonheader_bytes))
+
         message = message_hdr + jsonheader_bytes + content_bytes
+
         return message
 
     def process_events(self, mask):
@@ -115,7 +120,7 @@ class Message:
         self.spec_read()
 
     def spec_read(self):
-        """ Specific Read: This is an abstract method that each client and server much
+        """ Specific Read: This is an abstract method that each client and server must
             implement, since they do slightly different things for each read. 
         """
         pass
@@ -149,15 +154,19 @@ class Message:
 
     def process_protoheader(self):
         hdrlen = 2
+
         if len(self._recv_buffer) >= hdrlen:
             self._jsonheader_len = struct.unpack(">H", self._recv_buffer[:hdrlen])[0]
             self._recv_buffer = self._recv_buffer[hdrlen:]
 
     def process_jsonheader(self):
         hdrlen = self._jsonheader_len
+        
         if len(self._recv_buffer) >= hdrlen:
             self.jsonheader = self._json_decode(self._recv_buffer[:hdrlen], "utf-8")
+
             self._recv_buffer = self._recv_buffer[hdrlen:]
+
             for reqhdr in (
                 "byteorder",
                 "content-length",
@@ -167,15 +176,28 @@ class Message:
                 if reqhdr not in self.jsonheader:
                     raise ValueError(f'Missing required header "{reqhdr}".')
 
+
+    ##############################################################################################
     def process_server_request(self):
         content_len = self.jsonheader["content-length"]
+
         if not len(self._recv_buffer) >= content_len:
             return
+
         data = self._recv_buffer[:content_len]
+
         self._recv_buffer = self._recv_buffer[content_len:]
+
         if self.jsonheader["content-type"] == "text/json":
             encoding = self.jsonheader["content-encoding"]
+
             self.request = self._json_decode(data, encoding)
+
+            # Broday
+            # Take the action request and print for testing
+            if self.request['action'] == 'guess':
+                print('We made it here')
+
             print("received request", repr(self.request), "from", self.addr)
         else:
             # Binary or unknown content-type
@@ -205,9 +227,15 @@ class ServerMessage(Message):
     Description: Adds necessary server message functionality. In our case, packaging a response
                  and interacting with mongo db. 
     """
-    def __init__(self, selector, sock, addr,db=None):
+
+    # Broday
+    # Add integer response to client guess to list of args. 
+    # 1 signifies a guess that is too high
+    # 0 signified a guess that is correct
+    # -1 signifies a guess that is too low
+    def __init__(self, selector, sock, addr, guess_response=None):
         super().__init__(selector, sock, addr)  # call parent constructor
-        self.db = db    
+        self.guess_response = guess_response    
         self.request = None
         self.response_created = False
 
@@ -225,37 +253,26 @@ class ServerMessage(Message):
     def process_request(self):
         self.process_server_request()
 
-    def query_api(self):
-        """
-        This is where our database is communicated with. I would move this elsewhere
-        but without rewriting a lot more code, I decided to just keep it here.
-        """
-
-        # Simply passes on the "clients" request (built from key=value pairs on command line)
-        api = Api(self.db,self.request)
-        # Gets result from database class (and uses it in the response to client)
-        result = api.processRequest()
-        return result
-
     def create_response(self):
-        # Get our query results from the database
-        result = self.query_api()
 
-        if self.jsonheader["content-type"] == "text/json":
-            # building response to send to client
-            content_encoding = "utf-8"
+        ## HARDCODED FOR TESTING
+        result = "IT WORKED"
+        
+        if self.jsonheader['content-type'] == 'text/json':
+            # Building response to send to client
+            content_encoding = 'utf-8'
             response = {
-                "content_bytes": self._json_encode(result, content_encoding),
-                "content_type": "text/json",
-                "content_encoding": content_encoding,
+                'content_bytes': self._json_encode(result, content_encoding),
+                'content_type': 'text/json',
+                'content_encoding': content_encoding,
             }
         else:
             # Binary or unknown content-type
             response = {
-                "content_bytes": b"First 10 bytes of request: "
+                'content_bytes': b"First 10 bytes of request: "
                 + self.request[:10],
-                "content_type": "binary/custom-server-binary-type",
-                "content_encoding": "binary",
+                'content_type': 'binary/custom-server-binary-type',
+                'content_encoding': 'binary'
             }
 
         message = self._create_message(**response)
@@ -303,6 +320,7 @@ class ClientMessage(Message):
         content = self.request["content"]
         content_type = self.request["type"]
         content_encoding = self.request["encoding"]
+
         if content_type == "text/json":
             req = {
                 "content_bytes": self._json_encode(content, content_encoding),
@@ -315,16 +333,22 @@ class ClientMessage(Message):
                 "content_type": content_type,
                 "content_encoding": content_encoding,
             }
+
         message = self._create_message(**req)
+
         self._send_buffer += message
         self._request_queued = True
 
     def process_response(self):
         content_len = self.jsonheader["content-length"]
+
         if not len(self._recv_buffer) >= content_len:
             return
+
         data = self._recv_buffer[:content_len]
+
         self._recv_buffer = self._recv_buffer[content_len:]
+
         if self.jsonheader["content-type"] == "text/json":
             encoding = self.jsonheader["content-encoding"]
             self.response = self._json_decode(data, encoding)
