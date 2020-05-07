@@ -70,6 +70,8 @@ class Client:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setblocking(False)
+        # Broday
+        # must use connect_ex to avoid BlockingIOError exception
         sock.connect_ex(addr)
 
         events = selectors.EVENT_READ | selectors.EVENT_WRITE

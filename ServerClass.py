@@ -54,16 +54,41 @@ class Server:
 
         # Broday
         # Register a file object for selection, monitoring it for I/O events
-        # Results in a new SelectorKey instance
+        # This results in a new SelectorKey instance
         self.sel.register(conn, selectors.EVENT_READ, data=message)
 
-    def run_server(self):
-        #host, port = self.host, int(self.port)
-        lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+    '''
+    Broday
+    From https://realpython.com/python-sockets/
+
+    The basic order of API calls for the server is as follows:
+    1. socket()
+    2. bind()
+    3. listen()
+    4. accept()
+    '''
+    def run_server(self):
+        '''
+        Broday
+
+        Steps 1-3 are accomplished no matter what. If there are no incoming requests
+        from a client, we will never call accept(). When a client request is received,
+        it is accepted by accept_wrapper().
+        '''
+        #host, port = self.host, int(self.port)
+
+        # Broday
+        # 1. Get socket
+        # A socket that accepts IPv4 connections using TCP
+        lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Avoid bind() exception: OSError: [Errno 48] Address already in use
         lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # 2. Bind host and port
         lsock.bind((self.host, self.port))
+
+        # 3. Listen for incoming connections
         lsock.listen()
         print("listening on", (self.host, self.port))
 
@@ -73,22 +98,39 @@ class Server:
 
         # Listen until Ctrl + C
         try:
+            # Broday
+            # The event loop 
             while True:
                 # Broday
                 # an event that must be waited for on this file object
                 # select returns a list of (key, events) tuples, one
                 # for each ready file object
+
+                # Blocks until there are sockets ready for I/O
                 events = self.sel.select(timeout=None)
 
+                # events is a list of (key, event) tuples where key is a SelectorKey
+                # that contains a fileobj attribute, which is the socket object
+                # mask is an event mask of the operations that are ready
                 for key, mask in events:
                     # Broday
                     # fileobj is the file object registered
                     if key.data is None:
+                        # Broday
+                        # Accept the listening connection and register the socket with the selector
                         self.accept_wrapper(key.fileobj)
                     else:
+                        # Broday
+                        # If key.data is not None, then we are dealing with a client socket
+                        # that has already been accepted, so we receive the data and do something
+                        # with it
                         message = key.data
 
                         try:
+                            # Broday
+                            # Keep in mind that message is an instance of ServerMessage (see accept_wrapper())
+                            # process_events(mask) is implemented in the base class Message, which ServerMessage
+                            # inherits from. This determines whether read() or write() is invoked.
                             message.process_events(mask)
                         except Exception:
                             print(
