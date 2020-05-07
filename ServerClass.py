@@ -19,6 +19,7 @@ import io
 import struct
 import socket
 import traceback
+import random
 
 from Message import ServerMessage
 
@@ -34,6 +35,13 @@ class Server:
         
         if not self.port:
             self.port = int(config.port)
+
+        # Broday
+        # The server needs to hold a random number for clients to guess
+        # use modulus for now to have a reasonably-size number
+        self.rand_num = random.randint(-1000, 1000)
+        #self.rand_num = random.randint(-sys.maxsize - 1, sys.maxsize)
+        print(f"TESTING\n random number: {self.rand_num}")
 
         # Broday
         # DefaulSelector is an alias to the most efficient implementation available on the

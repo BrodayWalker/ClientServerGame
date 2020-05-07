@@ -14,6 +14,7 @@ Usage:
 import config
 import sys
 from ClientClass import Client
+from ClientClass import GuessClient
 from ClientClass import Request
 from helpers import myArgParse
 import json
@@ -55,10 +56,14 @@ if __name__ == "__main__":
     # run `Client.py host=xxx.xxx.xxx.xxx port=xxxx action=test` to see if server responds 
 
     # Broday
-    # Remove collection
+    # Remove collection argument
+    
     request = request.createRequest(action=action, key=key, data=data, value=value, params=params)
 
-    client = Client(host, port)
+    client = GuessClient(host, port)
+
     client.start_connection(request)
+
     response = client.get_response()
+
     print(response)

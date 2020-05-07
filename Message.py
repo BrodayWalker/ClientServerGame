@@ -193,11 +193,6 @@ class Message:
 
             self.request = self._json_decode(data, encoding)
 
-            # Broday
-            # Take the action request and print for testing
-            if self.request['action'] == 'guess':
-                print('We made it here')
-
             print("received request", repr(self.request), "from", self.addr)
         else:
             # Binary or unknown content-type
@@ -248,15 +243,69 @@ class ServerMessage(Message):
     def spec_read(self):
         if self.jsonheader:
             if self.request is None:
-                self.process_request()
+                # Broday
+                # Changed from original process_request() method
+                # to a class-specific implementation of process_server_request()
+                self.process_server_request()
 
-    def process_request(self):
-        self.process_server_request()
+    '''
+    Broday wrote this
+    Override the process_server_request method in the base class to implement
+    the integer guessing game functionality.
+
+    '''
+    def process_server_request(self):
+        content_len = self.jsonheader["content-length"]
+
+        if not len(self._recv_buffer) >= content_len:
+            return
+
+        # Broday
+        # read in the data from the receive buffer
+        data = self._recv_buffer[:content_len]
+
+        # Broday
+        # clear the data out of the receive buffer now that we've read it
+        # in and stored it
+        self._recv_buffer = self._recv_buffer[content_len:]
+
+        if self.jsonheader["content-type"] == "text/json":
+            encoding = self.jsonheader["content-encoding"]
+
+            # The request passed by the client
+            self.request = self._json_decode(data, encoding)
+
+            # Broday
+            # If action=guess is passed by the client, the client must also
+            # pass an integer value as value=<some_number>
+
+            # Check if action is in the client's request
+            if 'action' in self.request:
+                # See if the client wants to guess a number
+                if self.request['action'] == 'guess':
+                    # Make sure a value argument was given in the request
+                    if 'value' in self.request:
+                        print(self.request['value'])
+                    else:
+                        print('Invalid value argument. Pass an integer value.')
+
+
+
+            print("received request", repr(self.request), "from", self.addr)
+        else:
+            # Binary or unknown content-type
+            self.request = data
+            print(
+                f'received {self.jsonheader["content-type"]} request from',
+                self.addr,
+            )
+        # Set selector to listen for write events, we're done reading.
+        self._set_selector_events_mask("w")
 
     def create_response(self):
 
-        ## HARDCODED FOR TESTING
-        result = "IT WORKED"
+        #############
+        result = None
         
         if self.jsonheader['content-type'] == 'text/json':
             # Building response to send to client

@@ -49,7 +49,7 @@ class Request:
                            
 """
 class Client:
-    def __init__(self, host=None, port=None,debug=False):
+    def __init__(self, host=None, port=None, debug=False):
         self.sel = selectors.DefaultSelector()
         self.host = host
         self.port = port
@@ -76,8 +76,6 @@ class Client:
 
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
 
-        # Broday
-        # 
         message = ClientMessage(self.sel, sock, addr, request)
 
         self.sel.register(sock, events, data=message)
@@ -99,7 +97,7 @@ class Client:
                         )
 
                         message.close()
-                        
+
                 # Check for a socket being monitored to continue.
                 if not self.sel.get_map():
                     break
@@ -111,3 +109,44 @@ class Client:
 
     def get_response(self):
         return self.response
+
+
+
+'''
+ $$$$$$\                                           $$$$$$\  $$\ $$\                      $$\     
+$$  __$$\                                         $$  __$$\ $$ |\__|                     $$ |    
+$$ /  \__|$$\   $$\  $$$$$$\   $$$$$$$\  $$$$$$$\ $$ /  \__|$$ |$$\  $$$$$$\  $$$$$$$\ $$$$$$\   
+$$ |$$$$\ $$ |  $$ |$$  __$$\ $$  _____|$$  _____|$$ |      $$ |$$ |$$  __$$\ $$  __$$\\_$$  _|  
+$$ |\_$$ |$$ |  $$ |$$$$$$$$ |\$$$$$$\  \$$$$$$\  $$ |      $$ |$$ |$$$$$$$$ |$$ |  $$ | $$ |    
+$$ |  $$ |$$ |  $$ |$$   ____| \____$$\  \____$$\ $$ |  $$\ $$ |$$ |$$   ____|$$ |  $$ | $$ |$$\ 
+\$$$$$$  |\$$$$$$  |\$$$$$$$\ $$$$$$$  |$$$$$$$  |\$$$$$$  |$$ |$$ |\$$$$$$$\ $$ |  $$ | \$$$$  |
+ \______/  \______/  \_______|\_______/ \_______/  \______/ \__|\__| \_______|\__|  \__|  \____/                                                                                                                                                                                                                                                                                              
+'''
+class GuessClient(Client):
+    '''
+    Broday
+
+    The GameClient class extends the Client class to give game-specific behavior. 
+    The class specifically implements a client that connects to a server, passes an integer
+    number guess to the server, receives a response from the server (-1, 0, or 1) for too low,
+    correct, and too high respectively. 
+    '''
+    def __init__(self, host=None, port=None, debug=False):
+        super().__init__(host, port, debug)
+        
+        
+        # Hardcoded for now
+        # This is a starting guess
+        self.guess = 100
+
+        if self.debug == True:
+            print(self.host)
+            print(self.port)
+            print(self.debug)
+            print(self.guess)
+
+
+
+
+
+        
