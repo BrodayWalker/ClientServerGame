@@ -1,6 +1,6 @@
 # ClientServerGame
-ClientServerGame is a number guessing game between a server and multiple clients. The server holds a secret, random integer value that the clients must guess. A client connects to the server, sends its guess, receives a response from the server, and adjusts its guess accordingly. The server responds with a -1 for guesses that are too low, a 1 for guesses that are too high, and a 0 for guesses that are correct. <br>
-The program was written for and tested on Ubuntu 18.04, but it will run on Windows, thanks to Python's socket and selector modules. These modules use the appropriate system calls for both operating systems.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClientServerGame is a number guessing game between a server and multiple clients. The server holds a secret, random integer value that the clients must guess. A client connects to the server, sends its guess, receives a response from the server, and adjusts its guess accordingly. The server responds with a -1 for guesses that are too low, a 1 for guesses that are too high, and a 0 for guesses that are correct. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The program was written for and tested on Ubuntu 18.04, but it will run on Windows, thanks to Python's socket and selector modules. These modules use the appropriate system calls for both operating systems.
 
 ## Authors
 | Name | Email | Github Username |
@@ -32,14 +32,14 @@ debug = False
 ```
 
 ## Starting the Server
-Start the server before making any client requests. <br> 
-**Command if using config**: `./Server.py` <br>
-**Command without config**: `./Server.py host=10.0.0.1 port=6000`<br>
+Start the server before making any client requests. <br> <br>
+**Command if using config**: `./Server.py` <br> <br>
+**Command without config**: `./Server.py host=10.0.0.1 port=6000`<br><br>
 Keep in mind, the value of host is specific to you and your network.
 
 ## Starting the Client
-**Command if using config**: `./Client.py`<br>
-**Command without config**: `./Client.py host=10.0.0.1 port=6000` <br>
+**Command if using config**: `./Client.py`<br><br>
+**Command without config**: `./Client.py host=10.0.0.1 port=6000` <br><br>
 As with the server, make sure you are using the correct host value.
 
 ## Known Issues/Flaws
