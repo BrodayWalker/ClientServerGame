@@ -7,7 +7,7 @@ from datetime import datetime
 random.seed(datetime.now())
 
 # Max value
-MAX = (2**53)
+MAX = (2**53) -1
 
 # Always guess max so I can cut down 50% of the set of possibilities
 # everytime it's higher
