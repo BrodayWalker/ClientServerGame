@@ -78,8 +78,6 @@ class Client:
         # must use connect_ex to avoid BlockingIOError exception
         sock.connect_ex(addr)
 
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
 
         message = ClientMessage(sel, sock, addr, request)
@@ -143,7 +141,7 @@ class GuessClient(Client):
         # Change later to full size
         # self.guess = random.randint(0, sys.maxsize)
         # self.guess = random.randint(0, 1000)
-        self.guess = 420
+        self.guess = 500
         self.num_guesses = 0
         self.last_result = -1
 
@@ -184,61 +182,6 @@ class GuessClient(Client):
 
         return request, found
 
-
-    '''
-    def start_connection(self):
-     
-        ####################### Socket Stuff #######################
-        addr = (self.host, self.port)
-
-        if self.debug:
-            print("starting connection to", addr)
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(False)
-        # Broday
-        # must use connect_ex to avoid BlockingIOError exception
-        sock.connect_ex(addr)
-
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-
-        message = ClientMessage(self.sel, sock, addr, request)
-    
-        self.sel.register(sock, events, data=message)
-
-        try:
-            while True:
-                events = self.sel.select(timeout=1)
-
-                for key, mask in events:
-                    message = key.data
-
-                    print(key.data)
-
-                    try:
-                        message.process_events(mask)
-
-                    except Exception:
-                        print(
-                            "main: error: exception for",
-                            f"{message.addr}:\n{traceback.format_exc()}",
-                        )
-
-                        message.close()
-
-                # Check for a socket being monitored to continue.
-                if not self.sel.get_map():
-                    break
-        except KeyboardInterrupt:
-            print("caught keyboard interrupt, exiting")
-        finally:
-            # self.sel.close()
-            self.response = message.response
-    '''
-
-
     '''
     Broday
     '''
@@ -263,6 +206,106 @@ class GuessClient(Client):
 
         
         print('Done guessing')
+
+
+
+'''
+Broday
+'''
+class StayConnected(Client):
+    def __init__(self, host=None, port=None, debug=False):
+        super().__init__(host, port, debug)
+        self.guess = 80
+        self.num_guesses = 0
+        self.last_result = -1
+
+    def build_guess(self, last_result=-1, num_guesses=None):
+        found = False
+
+        # Adjust guess
+        if last_result != 0:
+            # If the last guess was low, make it larger
+            if last_result == -1:
+                self.guess += 1
+            # If the last guess was high, make it smaller
+            elif last_result == 1:
+                self.guess -= 1
+            else:
+                self.guess = random.randint(0, 1000)
+        elif last_result == 0:
+            request = None
+            found = True
+
+        self.num_guesses += 1 
+
+
+        request = Request()
+        request = request.createRequest(value=self.guess)
+
+        return request, found
+
+
+    def connect(self):
+        sel = selectors.DefaultSelector()
+
+        addr = (self.host, self.port)
+
+        if self.debug:
+            print("starting connection to", addr)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setblocking(False)
+        # Broday
+        # must use connect_ex to avoid BlockingIOError exception
+        sock.connect_ex(addr)
+
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+
+
+        ####
+        guess_request, found = self.build_guess(self.last_result)
+
+        message = ClientMessage(sel, sock, addr, guess_request, close_on_response=False)
+        ####
+
+    
+        sel.register(sock, events, data=message)
+
+        try:
+            while True:
+                events = sel.select(timeout=1)
+
+                for key, mask in events:
+                    message = key.data
+
+                    try:
+                        message.process_events(mask)
+
+                    except Exception:
+                        print(
+                            "main: error: exception for",
+                            f"{message.addr}:\n{traceback.format_exc()}",
+                        )
+
+                        message.close()
+
+                # Check for a socket being monitored to continue.
+                if not sel.get_map():
+                    break
+        except KeyboardInterrupt:
+            print("caught keyboard interrupt, exiting")
+        finally:
+            sel.close()
+
+    def run_game():
+        self.connect()
+        
+    
+
+
+    
+
+    
 
             
 

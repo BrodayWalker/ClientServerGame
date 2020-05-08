@@ -66,11 +66,16 @@ class Message:
                 print("sending", repr(self._send_buffer), "to", self.addr)
             try:
                 # Should be ready to write
+
+                # Broday
+                # Actual sending of information
                 sent = self.sock.send(self._send_buffer)
             except BlockingIOError:
                 # Resource temporarily unavailable (errno EWOULDBLOCK)
                 pass
             else:
+                # Broday
+                # Overwrite sent message to clear it from buffer
                 self._send_buffer = self._send_buffer[sent:]
 
     def _json_encode(self, obj, encoding):
@@ -248,7 +253,11 @@ class ServerMessage(Message):
                 # Broday
                 # Changed from original process_request() method
                 # to a class-specific implementation of process_server_request()
+
+    #############################################################################################            
                 self.process_server_request()
+
+    #############################################################################################
 
 
     '''
@@ -350,11 +359,14 @@ class ServerMessage(Message):
                                                       |___/      
 """
 class ClientMessage(Message):
-    def __init__(self, selector, sock, addr, request):
+    def __init__(self, selector, sock, addr, request, close_on_response=True):
         super().__init__(selector, sock, addr)
         self._request_queued = False
         self.request = request
         self.response = None
+
+        # Broday
+        self.close_on_response = close_on_response
 
         if self.jsonheader:
             if self.response is None:
@@ -422,6 +434,8 @@ class ClientMessage(Message):
             self.response = data
             print(f'Unknown content type: received {self.jsonheader["content-type"]} response from', self.addr,)
             #self._process_response_binary_content()
-        # Close when response has been processed
-        self.close()
+        
+        if self.close_on_response:
+            # Close when response has been processed
+            self.close()
 

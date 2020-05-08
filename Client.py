@@ -9,13 +9,14 @@ Requires:
     ClientClass.py
 Usage:
     Pass in values to the client using key value pairs 
-    ./Client.py host=10.0.61.34 port=6000 action=search value=rhino
+    ./Client.py host=10.0.61.34 port=6000
 """
 import config
 import sys
 from ClientClass import Client
 from ClientClass import GuessClient
 from ClientClass import Request
+from ClientClass import StayConnected
 from helpers import myArgParse
 import json
 
@@ -49,3 +50,8 @@ if __name__ == "__main__":
     # GuessClient starts it's connection in-class so it can keep guessing numbers
     # until it is correct
     client.start_guessing()
+
+    # Testing the client that stays connected
+    #client = StayConnected(host, port)
+    #client.connect()
+    
