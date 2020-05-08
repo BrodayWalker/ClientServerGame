@@ -303,8 +303,6 @@ class ServerMessage(Message):
 
             print("received request", repr(self.request), "from", self.addr)
 
-            print(self.result)
-
         else:
             # Binary or unknown content-type
             self.request = data

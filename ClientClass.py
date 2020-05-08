@@ -7,6 +7,7 @@ import struct
 import socket
 import traceback
 import random
+import time
 
 from Message import ClientMessage
 
@@ -75,6 +76,8 @@ class Client:
         # must use connect_ex to avoid BlockingIOError exception
         sock.connect_ex(addr)
 
+        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
 
         message = ClientMessage(self.sel, sock, addr, request)
@@ -134,8 +137,11 @@ class GuessClient(Client):
     '''
     def __init__(self, host=None, port=None, debug=False):
         super().__init__(host, port, debug)
-        self.guess = random.randint(0, sys.maxsize)
+        # Change later to full size
+        # self.guess = random.randint(0, sys.maxsize)
+        self.guess = random.randint(0, 1000)
         self.num_guesses = 0
+        self.last_result = -1
 
         if self.debug == True:
             print(self.host)
@@ -151,39 +157,109 @@ class GuessClient(Client):
     '''
     def build_guess(self, last_result=-1, num_guesses=None):
         # Adjust guess
-        if self.num_guesses > 0 and last_result != 0:
+        if last_result != 0:
             # If the last guess was low, make it larger
             if last_result == -1:
-                pass
+                self.guess += 1
             # If the last guess was high, make it smaller
             elif last_result == 1:
-                pass
+                self.guess -= 1
+            else:
+                self.guess = random.randint(0, 1000)
+        else:
+            request = None
+
+        self.num_guesses += 1 
 
 
         request = Request()
         request = request.createRequest(value=self.guess)
 
-        print(request)
-
         return request
 
+
+    '''
+    def start_connection(self):
+     
+        ####################### Socket Stuff #######################
+        addr = (self.host, self.port)
+
+        if self.debug:
+            print("starting connection to", addr)
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setblocking(False)
+        # Broday
+        # must use connect_ex to avoid BlockingIOError exception
+        sock.connect_ex(addr)
+
+        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        events = selectors.EVENT_READ | selectors.EVENT_WRITE
+
+        message = ClientMessage(self.sel, sock, addr, request)
+    
+        self.sel.register(sock, events, data=message)
+
+        try:
+            while True:
+                events = self.sel.select(timeout=1)
+
+                for key, mask in events:
+                    message = key.data
+
+                    print(key.data)
+
+                    try:
+                        message.process_events(mask)
+
+                    except Exception:
+                        print(
+                            "main: error: exception for",
+                            f"{message.addr}:\n{traceback.format_exc()}",
+                        )
+
+                        message.close()
+
+                # Check for a socket being monitored to continue.
+                if not self.sel.get_map():
+                    break
+        except KeyboardInterrupt:
+            print("caught keyboard interrupt, exiting")
+        finally:
+            # self.sel.close()
+            self.response = message.response
+    '''
 
 
     '''
     Broday
     '''
     def start_guessing(self):
+
+        correct = False
+
+        while correct == False:
+            # Build the guess
+            guess_request = self.build_guess(self.last_result)
+
+            # Start the connection
+            if guess_request != None:
+                self.start_connection(guess_request)
+
+                # This will need to be changed for multiple clients
+                self.last_result = self.get_response()
+
+                print(f"Last result: {self.last_result}")
+
+                time.sleep(1)
+            else:
+                correct = True
+
         
-        # Build the guess
-        guess_request = self.build_guess()
+        print('Done guessing')
 
-        # Start the connection
-        self.start_connection(guess_request)
-
-        # This will need to be changed for multiple clients
-        result = self.get_response()
-
-        print(result)
+            
 
 
 

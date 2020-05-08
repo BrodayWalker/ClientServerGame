@@ -30,7 +30,7 @@ if __name__ == "__main__":
     Main client driver. 
     """
     kwargs, args = myArgParse(sys.argv)
-    print(kwargs,args)
+    #print(kwargs,args)
 
     # get items from command line OR load them from config file
     host = kwargs.get("host", config.host)          # MANDATORY 

@@ -30,6 +30,8 @@ class Server:
         self.host = host
         self.port = int(port)
 
+        self.test_semaphore = 1
+
         if not self.host:
             self.host = config.host
         
@@ -139,8 +141,18 @@ class Server:
                         # If key.data is not None, then we are dealing with a client socket
                         # that has already been accepted, so we receive the data and do something
                         # with it
+
+                        '''
+                        Broday
+                        Thoughts: is this where I want to put the mutex?
+                        '''
                         message = key.data
 
+                        '''
+                        Broday
+                        More thoughts: here the object could be trying to obtain the lock. If it does,
+                        it plays the guessing game.
+                        '''
                         try:
                             # Broday
                             # Keep in mind that message is an instance of ServerMessage (see accept_wrapper())
@@ -152,7 +164,8 @@ class Server:
                                 "main: error: exception for",
                                 f"{message.addr}:\n{traceback.format_exc()}",
                             )
-                            message.close()                        
+                            message.close()
+                                              
         except KeyboardInterrupt:
             print("caught keyboard interrupt, exiting")
         finally:
