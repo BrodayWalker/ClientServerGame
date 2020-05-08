@@ -6,6 +6,7 @@ import io
 import struct
 import socket
 import traceback
+import random
 
 from Message import ClientMessage
 
@@ -28,7 +29,7 @@ class Request:
         self.request = {}
         self.request["type"] = "text/json"
         self.request["encoding"] = "utf-8"
-        self.request['content'] = {}
+        self.request["content"] = {}
 
     def createRequest(self, **kwargs):
         """ Loops through kwargs and pulls out all key value pairs creating
@@ -77,7 +78,7 @@ class Client:
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
 
         message = ClientMessage(self.sel, sock, addr, request)
-
+    
         self.sel.register(sock, events, data=message)
 
         try:
@@ -133,11 +134,8 @@ class GuessClient(Client):
     '''
     def __init__(self, host=None, port=None, debug=False):
         super().__init__(host, port, debug)
-        
-        
-        # Hardcoded for now
-        # This is a starting guess
-        self.guess = 100
+        self.guess = random.randint(0, sys.maxsize)
+        self.num_guesses = 0
 
         if self.debug == True:
             print(self.host)
@@ -145,6 +143,47 @@ class GuessClient(Client):
             print(self.debug)
             print(self.guess)
 
+    '''
+    Broday
+
+    Creates an instance of the Request class and returns it. The request will be properly formatted
+    and includes an integer number guess.
+    '''
+    def build_guess(self, last_result=-1, num_guesses=None):
+        # Adjust guess
+        if self.num_guesses > 0 and last_result != 0:
+            # If the last guess was low, make it larger
+            if last_result == -1:
+                pass
+            # If the last guess was high, make it smaller
+            elif last_result == 1:
+                pass
+
+
+        request = Request()
+        request = request.createRequest(value=self.guess)
+
+        print(request)
+
+        return request
+
+
+
+    '''
+    Broday
+    '''
+    def start_guessing(self):
+        
+        # Build the guess
+        guess_request = self.build_guess()
+
+        # Start the connection
+        self.start_connection(guess_request)
+
+        # This will need to be changed for multiple clients
+        result = self.get_response()
+
+        print(result)
 
 
 

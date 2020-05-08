@@ -39,9 +39,8 @@ class Server:
         # Broday
         # The server needs to hold a random number for clients to guess
         # use modulus for now to have a reasonably-size number
-        self.rand_num = random.randint(-1000, 1000)
-        #self.rand_num = random.randint(-sys.maxsize - 1, sys.maxsize)
-        print(f"TESTING\n random number: {self.rand_num}")
+        self.target = random.randint(0, 1000)
+        print(f"TESTING\n random number: {self.target}")
 
         # Broday
         # DefaulSelector is an alias to the most efficient implementation available on the
@@ -49,7 +48,15 @@ class Server:
         # Ref: https://docs.python.org/3/library/selectors.html
         self.sel = selectors.DefaultSelector()
 
-    def accept_wrapper(self,sock):
+
+    '''
+    Broday
+
+    '''
+    def make_new_target(self):
+        self.target = random.randint(0, 1000) 
+
+    def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
         print("accepted connection from", addr)
         
@@ -58,7 +65,7 @@ class Server:
         # Broday
         # Reference Message.py to see the ServerMessage class implementation
         # Get the message
-        message = ServerMessage(self.sel, conn, addr)
+        message = ServerMessage(self.sel, conn, addr, self.target)
 
         # Broday
         # Register a file object for selection, monitoring it for I/O events

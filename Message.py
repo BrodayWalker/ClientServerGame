@@ -9,8 +9,6 @@ import socket
 import traceback
 import time
 
-from DbHelpers import Api
-
 """
  ___  ___                               
  |  \/  |                               
@@ -228,11 +226,15 @@ class ServerMessage(Message):
     # 1 signifies a guess that is too high
     # 0 signified a guess that is correct
     # -1 signifies a guess that is too low
-    def __init__(self, selector, sock, addr, guess_response=None):
+    def __init__(self, selector, sock, addr, target, guess_response=None):
         super().__init__(selector, sock, addr)  # call parent constructor
         self.guess_response = guess_response    
         self.request = None
         self.response_created = False
+
+        # Broday added these
+        self.target = target
+        self.result = None
 
     def write(self):
         if self.request:
@@ -248,10 +250,13 @@ class ServerMessage(Message):
                 # to a class-specific implementation of process_server_request()
                 self.process_server_request()
 
+
     '''
     Broday wrote this
-    Override the process_server_request method in the base class to implement
-    the integer guessing game functionality.
+    Override the process_server_request method in the base class to implement some of
+    the integer guessing game functionality. process_server_request now serves as the
+    de facto comparison method that checks to see if the client guessed the target
+    number held by the server.
 
     '''
     def process_server_request(self):
@@ -276,22 +281,30 @@ class ServerMessage(Message):
             self.request = self._json_decode(data, encoding)
 
             # Broday
-            # If action=guess is passed by the client, the client must also
-            # pass an integer value as value=<some_number>
+            # Check if value is in the client's request
+            if 'value' in self.request:
+                print(self.request['value'])
 
-            # Check if action is in the client's request
-            if 'action' in self.request:
-                # See if the client wants to guess a number
-                if self.request['action'] == 'guess':
-                    # Make sure a value argument was given in the request
-                    if 'value' in self.request:
-                        print(self.request['value'])
-                    else:
-                        print('Invalid value argument. Pass an integer value.')
+                # Convert from string to int 
+                guess = int(self.request['value'])
 
-
+                # Check the client's guess vs the server's target number
+                # Guess is correct
+                if guess == self.target:
+                    self.result = 0
+                # Guess is low
+                elif guess < self.target:
+                    self.result = -1
+                # Guess is high
+                else:
+                    self.result = 1
+            else:
+                print('Invalid value argument. Pass an integer value.')
 
             print("received request", repr(self.request), "from", self.addr)
+
+            print(self.result)
+
         else:
             # Binary or unknown content-type
             self.request = data
@@ -303,15 +316,14 @@ class ServerMessage(Message):
         self._set_selector_events_mask("w")
 
     def create_response(self):
-
-        #############
-        result = None
         
         if self.jsonheader['content-type'] == 'text/json':
             # Building response to send to client
             content_encoding = 'utf-8'
             response = {
-                'content_bytes': self._json_encode(result, content_encoding),
+                # Broday
+                # This is where we encode the result
+                'content_bytes': self._json_encode(self.result, content_encoding),
                 'content_type': 'text/json',
                 'content_encoding': content_encoding,
             }
@@ -324,6 +336,7 @@ class ServerMessage(Message):
                 'content_encoding': 'binary'
             }
 
+        # Message created and ready to send
         message = self._create_message(**response)
         self.response_created = True
         self._send_buffer += message

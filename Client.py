@@ -34,36 +34,18 @@ if __name__ == "__main__":
 
     # get items from command line OR load them from config file
     host = kwargs.get("host", config.host)          # MANDATORY 
-    port = int(kwargs.get("port", config.port))     # MANDATORY Port to connect to (XXXXX, e,g, 6000)
-    
-    action = kwargs.get("action", None)             # MANDATORY Tells backend what to do: (search,insert, etc.) 
-
-    # The variables below are optional depending on what you are doing. 
-    key = kwargs.get("key", None)                   # optional 
-    value = kwargs.get("value", None)               # optional
-    data = kwargs.get("data", None)                 # optional
-    params = kwargs.get("params",None)
-
-
-
-    # Create an instance of our "Request" class
-    request = Request()
-
-    # if not (host and port and action) or (key or value):
-    #     Usage()
-
-
-    # run `Client.py host=xxx.xxx.xxx.xxx port=xxxx action=test` to see if server responds 
+    port = int(kwargs.get("port", config.port))     # MANDATORY Port to connect to (XXXXX, e,g, 6000) 
 
     # Broday
     # Remove collection argument
-    
-    request = request.createRequest(action=action, key=key, data=data, value=value, params=params)
+    # Replace this request in the GuessClient class. GuessClient only makes number guesses
+    # so it's request class handling is implemented specifically for that purpose.
+    # The request is now built inside the GuestClient class.
+    # Old call: request = request.createRequest(action=action, key=key, data=data, value=value, params=params)
 
     client = GuessClient(host, port)
 
-    client.start_connection(request)
-
-    response = client.get_response()
-
-    print(response)
+    # Broday
+    # GuessClient starts it's connection in-class so it can keep guessing numbers
+    # until it is correct
+    client.start_guessing()
