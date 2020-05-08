@@ -52,7 +52,7 @@ class Request:
 """
 class Client:
     def __init__(self, host=None, port=None, debug=False):
-        self.sel = selectors.DefaultSelector()
+        #self.sel = selectors.DefaultSelector()
         self.host = host
         self.port = port
         self.debug = debug
@@ -65,6 +65,8 @@ class Client:
             self.port = int(config.port)
 
     def start_connection(self, request):
+        sel = selectors.DefaultSelector()
+
         addr = (self.host, self.port)
 
         if self.debug:
@@ -80,13 +82,13 @@ class Client:
 
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
 
-        message = ClientMessage(self.sel, sock, addr, request)
+        message = ClientMessage(sel, sock, addr, request)
     
-        self.sel.register(sock, events, data=message)
+        sel.register(sock, events, data=message)
 
         try:
             while True:
-                events = self.sel.select(timeout=1)
+                events = sel.select(timeout=1)
 
                 for key, mask in events:
                     message = key.data
@@ -103,13 +105,14 @@ class Client:
                         message.close()
 
                 # Check for a socket being monitored to continue.
-                if not self.sel.get_map():
+                if not sel.get_map():
                     break
         except KeyboardInterrupt:
             print("caught keyboard interrupt, exiting")
         finally:
-            self.sel.close()
+            sel.close()
             self.response = message.response
+            
 
     def get_response(self):
         return self.response
@@ -139,7 +142,8 @@ class GuessClient(Client):
         super().__init__(host, port, debug)
         # Change later to full size
         # self.guess = random.randint(0, sys.maxsize)
-        self.guess = random.randint(0, 1000)
+        # self.guess = random.randint(0, 1000)
+        self.guess = 420
         self.num_guesses = 0
         self.last_result = -1
 
@@ -156,6 +160,8 @@ class GuessClient(Client):
     and includes an integer number guess.
     '''
     def build_guess(self, last_result=-1, num_guesses=None):
+        found = False
+
         # Adjust guess
         if last_result != 0:
             # If the last guess was low, make it larger
@@ -166,8 +172,9 @@ class GuessClient(Client):
                 self.guess -= 1
             else:
                 self.guess = random.randint(0, 1000)
-        else:
+        elif last_result == 0:
             request = None
+            found = True
 
         self.num_guesses += 1 
 
@@ -175,7 +182,7 @@ class GuessClient(Client):
         request = Request()
         request = request.createRequest(value=self.guess)
 
-        return request
+        return request, found
 
 
     '''
@@ -237,14 +244,14 @@ class GuessClient(Client):
     '''
     def start_guessing(self):
 
-        correct = False
+        found = False
 
-        while correct == False:
+        while found == False:
             # Build the guess
-            guess_request = self.build_guess(self.last_result)
+            guess_request, found = self.build_guess(self.last_result)
 
             # Start the connection
-            if guess_request != None:
+            if guess_request != None and found != True:
                 self.start_connection(guess_request)
 
                 # This will need to be changed for multiple clients
@@ -252,9 +259,7 @@ class GuessClient(Client):
 
                 print(f"Last result: {self.last_result}")
 
-                time.sleep(1)
-            else:
-                correct = True
+                time.sleep(.1)
 
         
         print('Done guessing')
