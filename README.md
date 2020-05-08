@@ -1,6 +1,4 @@
 # ClientServerGame
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClientServerGame is a number guessing game between a server and multiple clients. The server holds a secret, random integer value that the clients must guess. A client connects to the server, sends its guess, receives a response from the server, and adjusts its guess accordingly. The server responds with a -1 for guesses that are too low, a 1 for guesses that are too high, and a 0 for guesses that are correct. <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The program was written for and tested on Ubuntu 18.04, but it will run on Windows, thanks to Python's socket and selector modules. These modules use the appropriate system calls for both operating systems.
 
 ## Authors
 | Name | Email | Github Username |
@@ -10,6 +8,16 @@
 | [Ladelle Augustine](https://github.com/Ladelle) | ladelle2016@gmail.com | Ladelle |
 
 Comments are made throughout the code showing who contributed what.
+
+## The Game and Guessing Strategies
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ClientServerGame is a number guessing game between a server and multiple clients. The server holds a secret, random integer value that the clients must guess. A client connects to the server, sends its guess, receives a response from the server, and adjusts its guess accordingly. The server responds with a -1 for guesses that are too low, a 1 for guesses that are too high, and a 0 for guesses that are correct. <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The program was written for and tested on Ubuntu 18.04, but it will run on Windows, thanks to Python's socket and selector modules. These modules use the appropriate system calls for both operating systems.
+
+### Number Guessing Strategies
+
+
+
 
 ## Instructions
 Make sure Client.py and Server.py are executable:
